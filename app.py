@@ -1,329 +1,236 @@
-import json
-from datetime import datetime
-from pathlib import Path
-
 import streamlit as st
+import streamlit.components.v1 as components
+from datetime import datetime
 
 
-# -----------------------------
-# Helpers
-# -----------------------------
-ASSETS_DIR = Path(__file__).parent / "assets"
+# ----------------------------
+# PWA / iPhone icon injection
+# ----------------------------
+def inject_icons_and_manifest():
+    """
+    Injects <link rel="icon"> and <link rel="apple-touch-icon"> into <head>.
+    This makes the iPhone "Add to Home Screen" icon show your custom logo.
+    """
+    components.html(
+        """
+        <script>
+        (function() {
+          const links = [
+            { rel: "apple-touch-icon", sizes: "180x180", href: "assets/icon-180.png" },
+            { rel: "icon", type: "image/png", sizes: "192x192", href: "assets/icon-192.png" },
+            { rel: "icon", type: "image/png", sizes: "512x512", href: "assets/icon-512.png" },
+            // Optional: if you add manifest.json later, this will enable a more "app-like" install
+            // { rel: "manifest", href: "assets/manifest.json" },
+          ];
 
-ICON_180 = ASSETS_DIR / "icon-180.png"
-ICON_192 = ASSETS_DIR / "icon-192.png"
-ICON_512 = ASSETS_DIR / "icon-512.png"
-ICON_1024 = ASSETS_DIR / "icon-1024.png"
+          function upsertLink(attrs) {
+            // Try to find an existing matching link
+            let selector = 'link[rel="' + attrs.rel + '"]';
+            if (attrs.sizes) selector += '[sizes="' + attrs.sizes + '"]';
+            let el = document.head.querySelector(selector);
 
-def safe_icon_path(p: Path):
-    return str(p) if p.exists() else None
+            if (!el) {
+              el = document.createElement("link");
+              document.head.appendChild(el);
+            }
 
-def build_prompt(data: dict) -> str:
-    role = data.get("role", "").strip()
-    goal = data.get("goal", "").strip()
-    context = data.get("context", "").strip()
-    audience = data.get("audience", "").strip()
-    tone = data.get("tone", "").strip()
-    language = data.get("language", "").strip()
-    constraints = [c.strip() for c in data.get("constraints", []) if c.strip()]
-    must_include = [m.strip() for m in data.get("must_include", []) if m.strip()]
-    must_avoid = [m.strip() for m in data.get("must_avoid", []) if m.strip()]
-    output_format = data.get("output_format", "").strip()
-    length = data.get("length", "").strip()
-    examples = data.get("examples", "").strip()
-    evaluation = data.get("evaluation", "").strip()
+            Object.keys(attrs).forEach(k => el.setAttribute(k, attrs[k]));
+          }
 
-    lines = []
-
-    # Identity / role
-    if role:
-        lines.append(f"Agisci come: {role}")
-
-    # Language
-    if language:
-        lines.append(f"Rispondi in: {language}")
-
-    # Tone
-    if tone:
-        lines.append(f"Tono/Stile: {tone}")
-
-    # Audience
-    if audience:
-        lines.append(f"Pubblico target: {audience}")
-
-    lines.append("")  # spacer
-
-    # Goal
-    if goal:
-        lines.append("OBIETTIVO")
-        lines.append(goal)
-        lines.append("")
-
-    # Context
-    if context:
-        lines.append("CONTESTO")
-        lines.append(context)
-        lines.append("")
-
-    # Constraints
-    if constraints:
-        lines.append("VINCOLI")
-        for c in constraints:
-            lines.append(f"- {c}")
-        lines.append("")
-
-    # Must include / avoid
-    if must_include:
-        lines.append("INCLUDI OBBLIGATORIAMENTE")
-        for m in must_include:
-            lines.append(f"- {m}")
-        lines.append("")
-
-    if must_avoid:
-        lines.append("EVITA")
-        for m in must_avoid:
-            lines.append(f"- {m}")
-        lines.append("")
-
-    # Output format
-    if output_format or length:
-        lines.append("OUTPUT RICHIESTO")
-        if output_format:
-            lines.append(f"- Formato: {output_format}")
-        if length:
-            lines.append(f"- Lunghezza: {length}")
-        lines.append("")
-
-    # Examples
-    if examples:
-        lines.append("ESEMPI (se utili)")
-        lines.append(examples)
-        lines.append("")
-
-    # Evaluation / checklist
-    if evaluation:
-        lines.append("CONTROLLO QUALITÀ")
-        lines.append(evaluation)
-        lines.append("")
-
-    # Final instruction
-    lines.append("Se ti mancano informazioni importanti, fai prima le domande minime necessarie (max 5) e poi produci l’output.")
-
-    # Clean trailing spaces
-    prompt = "\n".join(lines).strip()
-    return prompt
+          links.forEach(upsertLink);
+        })();
+        </script>
+        """,
+        height=0,
+    )
 
 
-# -----------------------------
-# Page config (favicon/tab icon)
-# -----------------------------
+# ----------------------------
+# Page config
+# ----------------------------
 st.set_page_config(
     page_title="🧠 Prompt Builder",
-    page_icon=safe_icon_path(ICON_192) or "🧠",
+    page_icon="🧠",  # questo è l'icona tab “base”; le icone reali le iniettiamo sopra
     layout="wide",
 )
 
-
-# -----------------------------
-# Header
-# -----------------------------
-colA, colB = st.columns([1, 3], vertical_alignment="center")
-with colA:
-    if ICON_512.exists():
-        st.image(str(ICON_512), width=140)
-    else:
-        st.markdown("## 🧠")
-
-with colB:
-    st.title("🧠 Prompt Builder")
-    st.caption("Crea prompt chiari, completi e riutilizzabili per qualsiasi AI (ChatGPT, Claude, Gemini, ecc.).")
+inject_icons_and_manifest()
 
 
-# -----------------------------
+# ----------------------------
+# UI helpers
+# ----------------------------
+def pill(label: str, value: str):
+    st.markdown(
+        f"""
+        <div style="
+            display:inline-block;
+            padding:6px 10px;
+            border-radius:999px;
+            border:1px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.04);
+            margin-right:8px;
+            margin-bottom:8px;
+            font-size:13px;">
+          <b>{label}</b> {value}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def build_prompt(goal, audience, context, input_data, constraints, tone, format_out, examples, model_hint):
+    sections = []
+
+    sections.append(f"## Obiettivo\n{goal.strip() or '-'}")
+    sections.append(f"## Pubblico / Utente target\n{audience.strip() or '-'}")
+    sections.append(f"## Contesto\n{context.strip() or '-'}")
+
+    if input_data.strip():
+        sections.append(f"## Dati di input\n{input_data.strip()}")
+
+    if constraints.strip():
+        sections.append(f"## Vincoli\n{constraints.strip()}")
+
+    sections.append(f"## Stile / Tono\n{tone.strip() or '-'}")
+    sections.append(f"## Formato output richiesto\n{format_out.strip() or '-'}")
+
+    if examples.strip():
+        sections.append(f"## Esempi / Riferimenti\n{examples.strip()}")
+
+    if model_hint.strip():
+        sections.append(f"## Note per il modello\n{model_hint.strip()}")
+
+    sections.append(
+        "## Istruzioni finali\n"
+        "- Se qualcosa è ambiguo, fai domande mirate prima di rispondere.\n"
+        "- Ragiona passo-passo internamente, ma mostra all’utente solo il risultato finale in modo chiaro.\n"
+        "- Se proponi opzioni, presentale in elenco e poi consigliami la migliore."
+    )
+
+    return "\n\n".join(sections)
+
+
+# ----------------------------
 # Sidebar
-# -----------------------------
+# ----------------------------
 with st.sidebar:
-    st.subheader("Impostazioni")
-    st.write("Le icone vengono lette da `assets/` (icon-192 usata come favicon).")
+    st.image("assets/icon-512.png", width=84)
+    st.markdown("### 🧠 Prompt Builder")
+    st.caption("Costruisci prompt più chiari, completi e “a prova di fraintendimenti”.")
 
-    st.markdown("---")
-    preset = st.selectbox(
-        "Preset rapido",
+    template = st.selectbox(
+        "Template",
         [
-            "Generico",
-            "Copywriting (ads/landing)",
-            "Coding (debug/feature)",
-            "Analisi dati",
-            "Social (post/idee)",
-            "Prompt per immagini (stile/brief)",
+            "Generico (consigliato)",
+            "Copywriting / Ads",
+            "Analisi dati / Tabelle",
+            "Coding / Debug",
+            "Strategia / Business",
         ],
-        index=0
+        index=0,
     )
 
     st.markdown("---")
-    st.caption("Suggerimento: un buon prompt è come una richiesta al barista: se dici solo “caffè”, ti arriva quello che capita ☕")
+    st.markdown("**Suggerimento veloce**")
+    st.write("Un prompt forte = obiettivo + contesto + vincoli + formato output.")
 
 
-# -----------------------------
-# Defaults per preset
-# -----------------------------
-def preset_defaults(p: str) -> dict:
-    if p == "Copywriting (ads/landing)":
-        return dict(
-            role="Copywriter senior orientato alle conversioni",
-            tone="Chiaro, persuasivo, concreto, senza superlativi vuoti",
-            output_format="Titolo + sottotitolo + 3 bullet benefit + CTA + varianti",
-            evaluation="Controlla: chiarezza, specificità, coerenza col target, nessuna promessa non verificabile."
-        )
-    if p == "Coding (debug/feature)":
-        return dict(
-            role="Senior software engineer e code reviewer",
-            tone="Diretto, pratico, con esempi",
-            output_format="Spiegazione breve + patch/ codice + note su edge case",
-            evaluation="Controlla: correttezza, complessità, compatibilità, sicurezza."
-        )
-    if p == "Analisi dati":
-        return dict(
-            role="Data analyst",
-            tone="Preciso, strutturato",
-            output_format="Passi + formule/SQL/Python se serve + conclusioni",
-            evaluation="Controlla: assunzioni esplicite, limiti, interpretazione corretta."
-        )
-    if p == "Social (post/idee)":
-        return dict(
-            role="Content creator",
-            tone="Energico ma non cringe 😄",
-            output_format="10 idee + 3 hook + 1 calendario settimanale",
-            evaluation="Controlla: originalità, call-to-action, chiarezza."
-        )
-    if p == "Prompt per immagini (stile/brief)":
-        return dict(
-            role="Art director",
-            tone="Tecnico e descrittivo",
-            output_format="Prompt principale + negative prompt + varianti",
-            evaluation="Controlla: soggetto, stile, luce, composizione, dettagli coerenti."
-        )
-    return dict(
-        role="Assistente esperto",
-        tone="Chiaro e utile",
-        output_format="Strutturato in punti con esempi se utile",
-        evaluation="Controlla: rispetta i vincoli, niente invenzioni, chiedi chiarimenti se manca contesto."
-    )
+# ----------------------------
+# Main layout
+# ----------------------------
+st.title("🧠 Prompt Builder")
+st.caption("Costruisci un prompt “serio” senza perdere tempo. Poi copia/incolla dove vuoi (ChatGPT, Claude, Gemini, ecc.).")
 
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    pill("Template:", template)
+with c2:
+    pill("Aggiornato:", datetime.now().strftime("%d/%m/%Y"))
+with c3:
+    pill("Icone:", "iPhone + Browser ✅")
+with c4:
+    pill("Export:", "Copia / TXT ✅")
 
-defaults = preset_defaults(preset)
+st.markdown("---")
 
-# -----------------------------
-# Main builder UI
-# -----------------------------
-left, right = st.columns([1.1, 0.9], gap="large")
+left, right = st.columns([1, 1])
 
 with left:
-    st.subheader("1) Costruisci il prompt")
+    st.subheader("1) Inserisci i dettagli")
 
-    role = st.text_input("Ruolo dell’AI", value=defaults["role"], placeholder="Es: Product manager, Avvocato, Tutor di matematica...")
-    goal = st.text_area("Obiettivo", height=110, placeholder="Cosa vuoi ottenere, in modo misurabile?")
-    context = st.text_area("Contesto", height=140, placeholder="Dettagli, background, dati, link (se rilevanti)...")
-    audience = st.text_input("Pubblico target (opzionale)", placeholder="Es: principianti, clienti B2B, studenti...")
+    goal = st.text_area("Obiettivo (cosa vuoi ottenere?)", height=90, placeholder="Esempio: Crea una landing page che converta per un'app di prompt...")
 
-    c1, c2 = st.columns(2)
-    with c1:
-        tone = st.text_input("Tono / stile", value=defaults["tone"])
-    with c2:
-        language = st.selectbox("Lingua output", ["Italiano", "English", "Español", "Français", "Deutsch"], index=0)
+    if template == "Copywriting / Ads":
+        audience_ph = "Esempio: utenti iPhone 18–35, interessati a produttività e AI"
+        format_default = "Headline + sottotitolo + 3 benefit + CTA + 2 varianti A/B"
+    elif template == "Analisi dati / Tabelle":
+        audience_ph = "Esempio: un manager non tecnico che deve decidere velocemente"
+        format_default = "Tabella + bullet di insight + raccomandazione finale"
+    elif template == "Coding / Debug":
+        audience_ph = "Esempio: sviluppatore Python junior"
+        format_default = "Spiegazione breve + patch del codice + test suggeriti"
+    elif template == "Strategia / Business":
+        audience_ph = "Esempio: founder che deve validare un'idea"
+        format_default = "Analisi + opzioni + pro/contro + roadmap 30 giorni"
+    else:
+        audience_ph = "Esempio: principianti, esperti, clienti finali, ecc."
+        format_default = "Risposta strutturata con punti elenco e sezione finale con sintesi"
 
-    st.markdown("#### Vincoli / Regole")
-    constraints_raw = st.text_area(
-        "Un vincolo per riga (opzionale)",
-        height=100,
-        placeholder="Es:\n- Non usare gergo tecnico\n- Includi pro/contro\n- Massimo 200 parole",
-    )
-    constraints = [x.lstrip("-• ").strip() for x in constraints_raw.splitlines() if x.strip()]
+    audience = st.text_input("Pubblico / Utente target", placeholder=audience_ph)
 
-    st.markdown("#### Include / Evita")
-    ci1, ci2 = st.columns(2)
-    with ci1:
-        must_include_raw = st.text_area(
-            "Includi (uno per riga)",
-            height=90,
-            placeholder="Es:\n- Tabella comparativa\n- Esempi pratici",
-        )
-        must_include = [x.lstrip("-• ").strip() for x in must_include_raw.splitlines() if x.strip()]
-    with ci2:
-        must_avoid_raw = st.text_area(
-            "Evita (uno per riga)",
-            height=90,
-            placeholder="Es:\n- Nomi inventati\n- Dati non verificati",
-        )
-        must_avoid = [x.lstrip("-• ").strip() for x in must_avoid_raw.splitlines() if x.strip()]
+    context = st.text_area("Contesto (cosa deve sapere l’AI?)", height=90, placeholder="Vincoli, scenario, cosa hai già provato, cosa NON vuoi…")
 
-    st.markdown("#### Output")
-    o1, o2 = st.columns(2)
-    with o1:
-        output_format = st.text_input("Formato output", value=defaults["output_format"], placeholder="Es: lista puntata, tabella, JSON...")
-    with o2:
-        length = st.selectbox("Lunghezza", ["Breve", "Media", "Lunga", "Molto lunga"], index=1)
+    input_data = st.text_area("Dati di input (opzionale)", height=90, placeholder="Incolla testo, dati, link descrittivi, requisiti, ecc.")
 
-    examples = st.text_area("Esempi (opzionale)", height=110, placeholder="Incolla esempi di stile o input/output desiderati...")
-    evaluation = st.text_area("Checklist qualità (opzionale)", value=defaults["evaluation"], height=100)
+    constraints = st.text_area("Vincoli (opzionale)", height=80, placeholder="Esempio: max 120 parole, niente gergo, tono amichevole, ecc.")
 
-    data = {
-        "role": role,
-        "goal": goal,
-        "context": context,
-        "audience": audience,
-        "tone": tone,
-        "language": language,
-        "constraints": constraints,
-        "must_include": must_include,
-        "must_avoid": must_avoid,
-        "output_format": output_format,
-        "length": length,
-        "examples": examples,
-        "evaluation": evaluation,
-    }
+    tone = st.text_input("Stile / Tono", value="Chiaro, pratico, diretto")
+    format_out = st.text_input("Formato output richiesto", value=format_default)
 
-    generate = st.button("✨ Genera prompt", use_container_width=True)
+    examples = st.text_area("Esempi / Riferimenti (opzionale)", height=80, placeholder="Esempio: 'simile allo stile di X', oppure incolla un esempio di output ideale.")
+    model_hint = st.text_input("Note per il modello (opzionale)", placeholder="Esempio: 'se mancano info, fai 3 domande prima di rispondere'")
 
+    st.markdown("### 2) Genera")
+    generate = st.button("✨ Crea prompt", use_container_width=True)
 
 with right:
-    st.subheader("2) Prompt finale")
+    st.subheader("Prompt finale")
 
-    if "prompt" not in st.session_state:
-        st.session_state.prompt = ""
+    if "final_prompt" not in st.session_state:
+        st.session_state.final_prompt = ""
 
     if generate:
-        st.session_state.prompt = build_prompt(data)
-
-    if st.session_state.prompt.strip():
-        st.code(st.session_state.prompt, language="markdown")
-        st.download_button(
-            "⬇️ Scarica come TXT",
-            data=st.session_state.prompt.encode("utf-8"),
-            file_name=f"prompt_builder_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-            mime="text/plain",
-            use_container_width=True,
+        st.session_state.final_prompt = build_prompt(
+            goal=goal,
+            audience=audience,
+            context=context,
+            input_data=input_data,
+            constraints=constraints,
+            tone=tone,
+            format_out=format_out,
+            examples=examples,
+            model_hint=model_hint,
         )
 
-        st.download_button(
-            "⬇️ Scarica come JSON (dati builder)",
-            data=json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8"),
-            file_name=f"prompt_builder_data_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            mime="application/json",
-            use_container_width=True,
-        )
+    st.text_area(
+        "Copia/incolla questo prompt nella tua AI:",
+        value=st.session_state.final_prompt,
+        height=420,
+    )
 
-        st.info("Tip: incolla il prompt nella tua AI e poi aggiungi il materiale (testo/dati) subito dopo.")
-    else:
-        st.caption("Compila a sinistra e premi **Genera prompt**.")
+    colA, colB = st.columns(2)
+    with colA:
+        if st.session_state.final_prompt.strip():
+            st.download_button(
+                "⬇️ Scarica .txt",
+                data=st.session_state.final_prompt,
+                file_name="prompt_builder.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+    with colB:
+        st.caption("Tip: su iPhone, usa “Condividi → Aggiungi a Home” per averla come app.")
 
-
-# -----------------------------
-# Footer / assets check
-# -----------------------------
-with st.expander("🔧 Diagnostica assets (se qualcosa non si vede)"):
-    st.write("Percorso assets:", str(ASSETS_DIR))
-    st.write("icon-192 (favicon):", "OK ✅" if ICON_192.exists() else "MANCANTE ❌")
-    st.write("icon-512 (header):", "OK ✅" if ICON_512.exists() else "MANCANTE ❌")
-    st.write("icon-1024:", "OK ✅" if ICON_1024.exists() else "MANCANTE ❌")
-    st.caption("Se non vede le icone dopo il deploy, prova hard refresh del browser o redeploy.")
+st.markdown("---")
+st.caption("Se vuoi, dopo ti preparo anche il `manifest.json` (PWA) così su iPhone sembra ancora più un’app vera, con splash e nome corretto.")
