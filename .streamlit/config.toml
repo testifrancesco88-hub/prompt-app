@@ -1,11 +1,2 @@
-[theme]
-primaryColor = "#ff3b3b"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#1c1f26"
-textColor = "#ffffff"
-
 [server]
-headless = true
-
-[browser]
-gatherUsageStats = false
+enableStaticServing = true
