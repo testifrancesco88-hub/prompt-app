@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>🧠 Prompt Builder</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Prompt Builder">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- iOS ICONA (QUESTA È QUELLA CHE FINIVA SEMPRE SBAGLIATA SU STREAMLIT) -->
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+
+  <!-- fallback -->
+  <link rel="icon" href="assets/icon-192.png">
+</head>
+
+<body>
+  <h1>🧠 Prompt Builder</h1>
+  <p>Crea prompt efficaci per le AI</p>
+
+  <textarea placeholder="Scrivi cosa vuoi ottenere dall'AI..."></textarea>
+  <br><br>
+  <button>Genera Prompt</button>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
