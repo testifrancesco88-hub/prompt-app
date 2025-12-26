@@ -1,113 +1,144 @@
 import streamlit as st
-import streamlit.components.v1 as components
 
-# -----------------------------
-# Page config (favicon + title)
-# -----------------------------
+# -------------------------
+# CONFIG PAGINA
+# -------------------------
 st.set_page_config(
     page_title="Prompt Builder",
     page_icon="🧠",
     layout="centered",
 )
 
-# -----------------------------
-# Inject PWA / iOS icons + manifest
-# Streamlit serves ./static/* at /app/static/*
-# -----------------------------
-def inject_pwa_head():
-    icon180 = "/app/static/icon-180.png"
-    icon192 = "/app/static/icon-192.png"
-    icon512 = "/app/static/icon-512.png"
-    icon1024 = "/app/static/icon-1024.png"
-    manifest = "/app/static/manifest.json"
+# -------------------------
+# PWA / iOS HOME ICON (HEAD INJECTION)
+# -------------------------
+PWA_HEAD = """
+<link rel="manifest" href="/static/manifest.json">
 
-    js = f"""
-    <script>
-      (function() {{
-        // Prevent duplicates
-        function upsertLink(rel, href, sizes) {{
-          let sel = 'link[rel="' + rel + '"]' + (sizes ? '[sizes="' + sizes + '"]' : '');
-          let el = document.head.querySelector(sel);
-          if (!el) {{
-            el = document.createElement('link');
-            el.setAttribute('rel', rel);
-            if (sizes) el.setAttribute('sizes', sizes);
-            document.head.appendChild(el);
-          }}
-          el.setAttribute('href', href);
-        }}
+<!-- Favicon classico -->
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icon-192.png">
 
-        function upsertMeta(name, content) {{
-          let el = document.head.querySelector('meta[name="' + name + '"]');
-          if (!el) {{
-            el = document.createElement('meta');
-            el.setAttribute('name', name);
-            document.head.appendChild(el);
-          }}
-          el.setAttribute('content', content);
-        }}
+<!-- iOS: icona quando fai "Aggiungi a Home" -->
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icon-180.png">
 
-        // iOS / PWA-ish metas
-        upsertMeta('apple-mobile-web-app-capable', 'yes');
-        upsertMeta('apple-mobile-web-app-status-bar-style', 'default');
-        upsertMeta('apple-mobile-web-app-title', 'Prompt Builder');
+<!-- iOS: modalità app (standalone) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prompt Builder">
 
-        // Icons
-        upsertLink('apple-touch-icon', '{icon180}', '180x180');
-
-        // Optional: favicons (some browsers)
-        upsertLink('icon', '{icon192}', '192x192');
-        upsertLink('icon', '{icon512}', '512x512');
-
-        // Manifest
-        upsertLink('manifest', '{manifest}', null);
-
-      }})();
-    </script>
-    """
-
-    # Height=0 so it doesn't "take space"
-    components.html(js, height=0)
-
-inject_pwa_head()
-
-# -----------------------------
-# App UI (example)
-# -----------------------------
-st.title("🧠 Prompt Builder")
-st.caption("Genera prompt efficaci in pochi secondi.")
-
-with st.form("builder"):
-    goal = st.text_input("Obiettivo", placeholder="Es: creare un post Instagram che vende un corso")
-    audience = st.text_input("Pubblico", placeholder="Es: principianti, 25-35, interessati a…")
-    tone = st.selectbox("Tono", ["Professionale", "Amichevole", "Ironico", "Tecnico", "Persuasivo"])
-    context = st.text_area("Contesto / Vincoli", placeholder="Es: max 120 parole, includi CTA, no emoji…")
-    output = st.selectbox("Formato output", ["Testo", "Lista", "Tabella", "Script video", "Email"])
-    submit = st.form_submit_button("Crea prompt")
-
-if submit:
-    prompt = f"""Agisci come un esperto di prompt engineering.
-
-OBIETTIVO:
-{goal}
-
-PUBBLICO:
-{audience}
-
-TONO:
-{tone}
-
-CONTESTO E VINCOLI:
-{context}
-
-FORMATO OUTPUT:
-{output}
-
-ISTRUZIONI:
-- Fai domande solo se servono davvero; altrimenti procedi.
-- Produci un risultato pronto all'uso.
-- Se opportuno, proponi 2 varianti (breve e dettagliata).
+<!-- Colore barra / UI -->
+<meta name="theme-color" content="#0b0b10">
 """
-    st.subheader("✅ Prompt pronto da copiare")
-    st.code(prompt, language="text")
-    st.success("Fatto. Ora incollalo nella tua AI preferita e fai magia.")
+
+st.markdown(PWA_HEAD, unsafe_allow_html=True)
+
+# -------------------------
+# UI APP
+# -------------------------
+st.title("🧠 Prompt Builder")
+st.caption("Crea prompt più chiari, completi e riutilizzabili — senza impazzire.")
+
+with st.expander("⚙️ Impostazioni", expanded=True):
+    lingua = st.selectbox("Lingua del prompt", ["Italiano", "English"], index=0)
+    stile = st.selectbox("Stile output", ["Chiaro e pratico", "Tecnico", "Creativo", "Sintetico"], index=0)
+    formato = st.selectbox("Formato risposta", ["Testo", "Elenco puntato", "Tabella", "Passi numerati"], index=0)
+    tono = st.selectbox("Tono", ["Neutro", "Amichevole", "Professionale", "Ironico"], index=1)
+    lunghezza = st.selectbox("Lunghezza", ["Breve", "Media", "Dettagliata"], index=1)
+
+st.divider()
+
+obiettivo = st.text_area(
+    "🎯 Cosa vuoi ottenere dall'AI?",
+    placeholder="Esempio: Voglio un piano marketing per un negozio di stampa 3D con budget ridotto..."
+)
+
+contesto = st.text_area(
+    "🧩 Contesto utile (opzionale)",
+    placeholder="Esempio: target Italia, budget 200€/mese, canali Instagram/TikTok, obiettivo lead..."
+)
+
+vincoli = st.text_area(
+    "⛔ Vincoli / Requisiti (opzionale)",
+    placeholder="Esempio: niente ads, solo organico; evita gergo troppo tecnico; includi esempi..."
+)
+
+input_dati = st.text_area(
+    "📎 Dati / Materiali da usare (opzionale)",
+    placeholder="Esempio: elenco prodotti, prezzi, USP, link, testo descrizione..."
+)
+
+st.divider()
+
+def build_prompt():
+    lang_map = {
+        "Italiano": "Italiano",
+        "English": "English"
+    }
+
+    prompt = []
+    if lingua == "Italiano":
+        prompt.append("Agisci come un assistente esperto di prompt engineering.")
+        prompt.append(f"Stile: {stile}. Tono: {tono}. Lunghezza: {lunghezza}. Formato: {formato}.")
+        prompt.append("")
+        prompt.append("OBIETTIVO:")
+        prompt.append(obiettivo.strip() if obiettivo.strip() else "-")
+        prompt.append("")
+        prompt.append("CONTESTO:")
+        prompt.append(contesto.strip() if contesto.strip() else "-")
+        prompt.append("")
+        prompt.append("VINCOLI / REQUISITI:")
+        prompt.append(vincoli.strip() if vincoli.strip() else "-")
+        prompt.append("")
+        prompt.append("DATI / MATERIALI DA USARE:")
+        prompt.append(input_dati.strip() if input_dati.strip() else "-")
+        prompt.append("")
+        prompt.append("ISTRUZIONI FINALI:")
+        prompt.append("1) Se mancano informazioni, fai prima 3-7 domande mirate.")
+        prompt.append("2) Poi produci la risposta finale nel formato richiesto.")
+    else:
+        prompt.append("Act as an expert prompt-engineering assistant.")
+        prompt.append(f"Style: {stile}. Tone: {tono}. Length: {lunghezza}. Format: {formato}.")
+        prompt.append("")
+        prompt.append("GOAL:")
+        prompt.append(obiettivo.strip() if obiettivo.strip() else "-")
+        prompt.append("")
+        prompt.append("CONTEXT:")
+        prompt.append(contesto.strip() if contesto.strip() else "-")
+        prompt.append("")
+        prompt.append("CONSTRAINTS / REQUIREMENTS:")
+        prompt.append(vincoli.strip() if vincoli.strip() else "-")
+        prompt.append("")
+        prompt.append("DATA / MATERIALS TO USE:")
+        prompt.append(input_dati.strip() if input_dati.strip() else "-")
+        prompt.append("")
+        prompt.append("FINAL INSTRUCTIONS:")
+        prompt.append("1) If info is missing, ask 3-7 targeted questions first.")
+        prompt.append("2) Then produce the final answer in the requested format.")
+
+    return "\n".join(prompt)
+
+col1, col2 = st.columns([1, 1])
+with col1:
+    genera = st.button("✨ Genera prompt", use_container_width=True)
+with col2:
+    pulisci = st.button("🧹 Pulisci", use_container_width=True)
+
+if pulisci:
+    st.rerun()
+
+if genera:
+    if not obiettivo.strip():
+        st.warning("Scrivi almeno l’obiettivo: senza quello l’AI va in vacanza 😄")
+    else:
+        prompt_finale = build_prompt()
+        st.subheader("📌 Prompt pronto da copiare")
+        st.code(prompt_finale, language="markdown")
+        st.download_button(
+            "⬇️ Scarica prompt (.txt)",
+            data=prompt_finale.encode("utf-8"),
+            file_name="prompt_builder.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
+
+st.caption("Tip: dopo aver cambiato icona su iPhone, elimina la vecchia icona dalla Home e aggiungi di nuovo.")
