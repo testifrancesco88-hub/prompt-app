@@ -5,118 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🧠 Prompt Builder Pro</title>
 
-  <link rel="manifest" href="manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="apple-touch-icon" href="assets/icon-180.png">
-  <link rel="icon" href="assets/icon-192.png">
-
   <style>
+    /* ... (Manteniamo lo stile precedente) ... */
     :root {
-      --bg-color: #f4f7f6;
-      --card-bg: #ffffff;
-      --text-color: #2c3e50;
-      --primary: #007AFF;
-      --secondary: #34C759;
-      --accent: #5856D6;
-      --fav: #FFCC00;
-      --danger: #ff3b30;
-      --border: #ddd;
+      --bg-color: #f4f7f6; --card-bg: #ffffff; --text-color: #2c3e50;
+      --primary: #007AFF; --secondary: #34C759; --accent: #5856D6;
+      --fav: #FFCC00; --danger: #ff3b30; --border: #ddd;
     }
-
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-color: #121212;
-        --card-bg: #1e1e1e;
-        --text-color: #f4f7f6;
-        --border: #333;
-      }
+      :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #f4f7f6; --border: #333; }
     }
-
-    body {
-      font-family: -apple-system, system-ui, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-      margin: 0;
-      line-height: 1.4;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 500px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    h1 { text-align: center; margin-bottom: 5px; font-size: 24px; }
-    label { font-size: 11px; font-weight: bold; text-transform: uppercase; opacity: 0.6; margin-left: 5px; }
-
-    select, textarea {
-      width: 100%;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: var(--text-color);
-      font-size: 16px;
-      box-sizing: border-box;
-      outline: none;
-    }
-
+    body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-color); display: flex; justify-content: center; padding: 20px; }
+    .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
+    select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-color); font-size: 16px; box-sizing: border-box; }
     textarea { height: 140px; resize: none; border-bottom: 3px solid var(--primary); }
-
-    .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
-    
-    button {
-      flex: 1;
-      min-width: 100px;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
+    .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    button { padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-inspire { background: var(--accent); color: white; grid-column: span 2; }
     .btn-main { background: var(--primary); color: white; }
     .btn-copy { background: var(--secondary); color: white; }
-    .btn-inspire { background: var(--accent); color: white; }
-    .btn-fav { background: var(--fav); color: #000; }
-    .btn-reset { background: transparent; color: var(--danger); width: 100%; margin-top: 5px; }
-
-    /* Preferiti */
-    .favorites-section { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
-    .fav-item {
-      background: var(--card-bg);
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 8px;
-      font-size: 13px;
-      border: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .fav-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
-
-    /* Sezione Info */
-    .info-box {
-      background: var(--card-bg);
-      padding: 15px;
-      border-radius: 12px;
-      text-align: center;
-      margin-top: 20px;
-      font-size: 14px;
-      border: 1px dashed var(--border);
-    }
-    .dev-name { font-weight: bold; color: var(--primary); }
-
-    button:active { transform: scale(0.96); opacity: 0.8; }
+    .btn-gpt { background: #74aa9c; color: white; font-size: 12px; grid-column: span 2; }
+    .info-box { text-align: center; margin-top: 20px; font-size: 12px; opacity: 0.7; }
+    .fav-item { background: var(--card-bg); padding: 8px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; font-size: 12px; border: 1px solid var(--border); }
   </style>
 </head>
 
@@ -124,119 +34,73 @@
   <div class="container">
     <h1>🧠 Prompt Builder Pro</h1>
 
-    <div>
-      <label>Categoria</label>
-      <select id="typeSelect">
-        <option value="text">✍️ Testo / Chat</option>
-        <option value="image">🎨 Immagine AI</option>
-        <option value="video">🎥 Video AI</option>
-      </select>
-    </div>
+    <select id="typeSelect">
+      <option value="text">✍️ Testo / Chat</option>
+      <option value="image">🎨 Immagine AI</option>
+      <option value="video">🎥 Video AI</option>
+    </select>
 
-    <textarea id="promptInput" placeholder="Inserisci la tua idea o usa 'Ispirami'..."></textarea>
+    <textarea id="promptInput" placeholder="Clicca 'Ispirami' o scrivi qui..."></textarea>
 
-    <div class="button-group">
-      <button class="btn-inspire" onclick="inspireMe()">Ispirami 🎲</button>
+    <div class="button-grid">
+      <button class="btn-inspire" onclick="inspireMe()">🎲 Ispirami (Mix Infinito)</button>
       <button class="btn-main" onclick="generatePrompt()">Ottimizza ✨</button>
-      <button class="btn-fav" onclick="saveToFavorites()">Salva ⭐</button>
       <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
+      <button class="btn-gpt" onclick="copyGptTask()">🤖 Ottieni idee da ChatGPT</button>
     </div>
 
-    <div class="favorites-section">
-      <label>Preferiti ⭐</label>
-      <div id="favoritesList"></div>
-    </div>
-
-    <button class="btn-reset" onclick="resetAll()">Svuota tutto</button>
+    <div id="favoritesList"></div>
 
     <div class="info-box">
-      <p>🚀 <strong>Prompt Builder Pro</strong> v1.5<br>
-      Sviluppato con ❤️ da <span class="dev-name">Testi Francesco</span></p>
+      Sviluppato da <strong>Testi Francesco</strong>
     </div>
   </div>
 
   <script>
     const area = document.getElementById('promptInput');
     const type = document.getElementById('typeSelect');
-    const favList = document.getElementById('favoritesList');
 
-    const ideas = {
-      text: ["Un itinerario di 3 giorni a Roma", "Una ricetta sana con avocado", "Spiega la blockchain a un nonno"],
-      image: ["Cyberpunk city in the rain", "Astronaut riding a horse on mars", "Hyperrealistic cat portrait"],
-      video: ["Aerial shot of an island", "Time-lapse of a flower blooming", "Cinematic drone flight through mountains"]
+    // SISTEMA DI GENERAZIONE SEMI-IA (COMBINATORIA)
+    const data = {
+      subjects: ["Un gatto", "Un astronauta", "Una città", "Un antico guerriero", "Un robot", "Un paesaggio"],
+      actions: ["che esplora", "che combatte contro", "immerso in", "che sogna", "che vola sopra"],
+      contexts: ["una foresta di cristallo", "il deserto di Marte", "una New York cyberpunk", "un oceano di nuvole", "un buco nero"],
+      styles: ["in stile acquerello", "iper-realistico", "pixel art", "stile Pixar", "cinematografico"]
     };
 
     function inspireMe() {
-      const list = ideas[type.value];
-      area.value = list[Math.floor(Math.random() * list.length)];
+      const s = data.subjects[Math.floor(Math.random() * data.subjects.length)];
+      const a = data.actions[Math.floor(Math.random() * data.actions.length)];
+      const c = data.contexts[Math.floor(Math.random() * data.contexts.length)];
+      const st = data.styles[Math.floor(Math.random() * data.styles.length)];
+      
+      area.value = `${s} ${a} ${c} ${st}`;
       saveLocal();
+    }
+
+    // FUNZIONE PER CHIEDERE A CHATGPT
+    function copyGptTask() {
+      const task = `Ciao ChatGPT, agisci come un esperto Prompt Designer. Generami una lista di 10 idee creative e originali per la categoria: ${type.value}. Le idee devono essere brevi e pronte per essere ottimizzate. Forniscile come elenco puntato.`;
+      navigator.clipboard.writeText(task);
+      alert("Comando per ChatGPT copiato! Incollalo su ChatGPT per avere idee infinite.");
     }
 
     function generatePrompt() {
-      const input = area.value.trim();
-      if (!input) return alert("Scrivi qualcosa!");
-      
-      let res = "";
-      if (type.value === "text") res = `Agisci come un esperto. Elabora: "${input}".`;
-      else if (type.value === "image") res = `AI Image: "${input}", 8k, cinematic, sharp focus.`;
-      else res = `AI Video: "${input}", smooth motion, 4k, photorealistic.`;
-      
-      area.value = res;
+      if (!area.value) return;
+      let p = area.value;
+      if(type.value === "image") p = `Image Prompt: ${p}, 8k, highly detailed, masterpieces, cinematic lighting.`;
+      if(type.value === "text") p = `Agisci come un esperto. Spiega/Scrivi: ${p} in modo professionale e strutturato.`;
+      area.value = p;
       saveLocal();
-    }
-
-    function saveToFavorites() {
-      const text = area.value.trim();
-      if (!text) return;
-      let favs = JSON.parse(localStorage.getItem('favPrompts') || '[]');
-      if (!favs.includes(text)) {
-        favs.push(text);
-        localStorage.setItem('favPrompts', JSON.stringify(favs));
-        renderFavorites();
-      }
-    }
-
-    function renderFavorites() {
-      const favs = JSON.parse(localStorage.getItem('favPrompts') || '[]');
-      favList.innerHTML = favs.map((f, i) => `
-        <div class="fav-item">
-          <span class="fav-text">${f}</span>
-          <div>
-            <button onclick="useFav(${i})" style="background:var(--primary); color:white; padding:4px 8px; min-width:auto">Usa</button>
-            <button onclick="removeFav(${i})" style="background:var(--danger); color:white; padding:4px 8px; min-width:auto">X</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function useFav(i) {
-      area.value = JSON.parse(localStorage.getItem('favPrompts'))[i];
-      saveLocal();
-    }
-
-    function removeFav(i) {
-      let favs = JSON.parse(localStorage.getItem('favPrompts'));
-      favs.splice(i, 1);
-      localStorage.setItem('favPrompts', JSON.stringify(favs));
-      renderFavorites();
     }
 
     async function copyPrompt() {
       await navigator.clipboard.writeText(area.value);
-      alert("Copiato!");
-    }
-
-    function resetAll() {
-      area.value = "";
-      localStorage.removeItem('lastPrompt');
+      alert("Prompt copiato!");
     }
 
     function saveLocal() { localStorage.setItem('lastPrompt', area.value); }
-    
-    window.onload = () => {
-      renderFavorites();
-      if (localStorage.getItem('lastPrompt')) area.value = localStorage.getItem('lastPrompt');
-    };
+    window.onload = () => { area.value = localStorage.getItem('lastPrompt') || ""; };
   </script>
 </body>
 </html>
