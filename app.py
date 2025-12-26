@@ -1,4 +1,9 @@
 import streamlit as st
+st.set_page_config(
+    page_title="🧠 Prompt Builder",
+    page_icon="assets/icon-192.png",
+    layout="centered"
+)
 import pandas as pd
 from datetime import datetime
 
