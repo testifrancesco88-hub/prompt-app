@@ -3,72 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>🧠 Prompt Builder</title>
+  <title>🧠 Prompt Builder Pro</title>
 
   <link rel="manifest" href="manifest.json">
-
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Prompt Builder">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   <link rel="apple-touch-icon" href="assets/icon-180.png">
-
   <link rel="icon" href="assets/icon-192.png">
 
   <style>
+    :root {
+      --bg-color: #f4f7f6;
+      --card-bg: #ffffff;
+      --text-color: #2c3e50;
+      --primary: #007AFF;
+      --secondary: #34C759;
+      --danger: #ff3b30;
+      --border: #ddd;
+    }
+
+    /* DARK MODE AUTOMATICA */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #f4f7f6;
+        --border: #333;
+      }
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, system-ui, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
       padding: 20px;
       margin: 0;
-      background-color: #f4f7f6;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      transition: all 0.3s ease;
     }
+
     .container {
       width: 100%;
       max-width: 500px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
-    h1 { 
-      color: #2c3e50; 
-      margin-bottom: 10px;
-    }
-    p {
-      color: #7f8c8d;
-      margin-bottom: 20px;
-    }
-    textarea {
+
+    h1 { text-align: center; margin-bottom: 5px; }
+    p { text-align: center; opacity: 0.8; margin-top: 0; }
+
+    select, textarea {
       width: 100%;
-      height: 150px;
-      padding: 15px;
+      padding: 12px;
       border-radius: 12px;
-      border: 1px solid #ddd;
-      font-size: 16px; /* Ottimo per evitare lo zoom automatico su iOS */
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      resize: vertical;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 16px;
       box-sizing: border-box;
     }
-    button {
-      margin-top: 20px;
-      background-color: #007AFF;
-      color: white;
-      border: none;
-      padding: 15px 30px;
-      border-radius: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.1s, background 0.3s;
-      width: 100%;
-      box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+
+    textarea { height: 180px; resize: none; }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
     }
-    button:active {
-      transform: scale(0.98);
-      background-color: #0056b3;
+
+    button {
+      flex: 1;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    .btn-main { background: var(--primary); color: white; }
+    .btn-copy { background: var(--secondary); color: white; }
+    .btn-reset { background: transparent; color: var(--danger); }
+
+    /* Chips per suggerimenti rapidi */
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 5px;
+    }
+    .chip {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      white-space: nowrap;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -76,42 +111,87 @@
 <body>
   <div class="container">
     <h1>🧠 Prompt Builder</h1>
-    <p>Crea prompt efficaci per le AI</p>
+    <p>Ottimizza le tue richieste AI</p>
 
-    <textarea id="promptInput" placeholder="Scrivi cosa vuoi ottenere dall'AI..."></textarea>
-    <button id="generateBtn">Genera Prompt</button>
+    <div class="chips">
+      <div class="chip" onclick="setTemplate('Riassumi questo testo in 3 punti chiave:')">📝 Riassunto</div>
+      <div class="chip" onclick="setTemplate('Scrivi una email professionale a [Nome] per:')">📧 Email</div>
+      <div class="chip" onclick="setTemplate('Trova l\'errore in questo codice e spiegalo:')">💻 Debug</div>
+      <div class="chip" onclick="setTemplate('Spiega questo concetto come se avessi 5 anni:')">👶 ELI5</div>
+    </div>
+
+    <select id="toneSelect">
+      <option value="professionale, autoritario ed esperto">Tono: Professionale</option>
+      <option value="creativo, originale e coinvolgente">Tono: Creativo</option>
+      <option value="semplice, chiaro e conciso">Tono: Semplice</option>
+      <option value="ironico e divertente">Tono: Sarcastico</option>
+    </select>
+
+    <textarea id="promptInput" placeholder="Inserisci la tua idea..."></textarea>
+
+    <div class="button-group">
+      <button class="btn-main" onclick="generatePrompt()">Ottimizza ✨</button>
+      <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
+    </div>
+
+    <button class="btn-reset" onclick="resetAll()">Svuota tutto</button>
   </div>
 
   <script>
-    // Registrazione Service Worker per PWA
+    const area = document.getElementById('promptInput');
+    const tone = document.getElementById('toneSelect');
+
+    // Recupera l'ultimo prompt salvato al caricamento
+    window.onload = () => {
+      const saved = localStorage.getItem('lastPrompt');
+      if (saved) area.value = saved;
+    };
+
+    function setTemplate(text) {
+      area.value = text;
+      area.focus();
+    }
+
+    function generatePrompt() {
+      const input = area.value.trim();
+      if (!input) return alert("Inserisci del testo!");
+
+      const enhanced = `Agisci come un assistente esperto. Usando un tono ${tone.value}, elabora la seguente richiesta:\n\n"${input}"\n\nFornisci una risposta strutturata, precisa e completa.`;
+      
+      area.value = enhanced;
+      saveLocal();
+    }
+
+    async function copyPrompt() {
+      if (!area.value) return;
+      try {
+        await navigator.clipboard.writeText(area.value);
+        const originalBtn = document.querySelector('.btn-copy').innerText;
+        document.querySelector('.btn-copy').innerText = "Copiato! ✅";
+        setTimeout(() => { document.querySelector('.btn-copy').innerText = "Copia 📋"; }, 2000);
+      } catch (err) {
+        alert("Errore nella copia");
+      }
+    }
+
+    function resetAll() {
+      if (confirm("Vuoi cancellare tutto?")) {
+        area.value = "";
+        localStorage.removeItem('lastPrompt');
+      }
+    }
+
+    function saveLocal() {
+      localStorage.setItem('lastPrompt', area.value);
+    }
+
+    // Salvataggio automatico mentre si scrive
+    area.addEventListener('input', saveLocal);
+
+    // Registrazione Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
-
-    // PUNTO 3: LOGICA DI GENERAZIONE
-    const btn = document.getElementById('generateBtn');
-    const area = document.getElementById('promptInput');
-
-    btn.addEventListener('click', () => {
-      const userInput = area.value.trim();
-      
-      if (!userInput) {
-        alert("Per favore, inserisci un'idea o un argomento!");
-        return;
-      }
-      
-      // Esempio di espansione del prompt (Prompt Engineering di base)
-      const enhancedPrompt = `Agisci come un esperto nel settore. 
-In merito a: "${userInput}", sviluppa una risposta dettagliata, 
-organizzata per punti chiari, fornendo esempi pratici e mantenendo un tono professionale. 
-Assicurati di coprire tutti gli aspetti fondamentali.`;
-      
-      area.value = enhancedPrompt;
-      
-      // Feedback visivo (opzionale)
-      btn.innerText = "Ottimizzato! ✨";
-      setTimeout(() => { btn.innerText = "Genera Prompt"; }, 2000);
-    });
   </script>
 </body>
 </html>
