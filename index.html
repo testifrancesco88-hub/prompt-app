@@ -22,7 +22,6 @@
       --border: #ddd;
     }
 
-    /* DARK MODE AUTOMATICA */
     @media (prefers-color-scheme: dark) {
       :root {
         --bg-color: #121212;
@@ -40,7 +39,6 @@
       justify-content: center;
       padding: 20px;
       margin: 0;
-      transition: all 0.3s ease;
     }
 
     .container {
@@ -51,8 +49,8 @@
       gap: 15px;
     }
 
-    h1 { text-align: center; margin-bottom: 5px; }
-    p { text-align: center; opacity: 0.8; margin-top: 0; }
+    h1 { text-align: center; margin-bottom: 5px; font-size: 24px; }
+    label { font-size: 12px; font-weight: bold; text-transform: uppercase; opacity: 0.7; margin-left: 5px; }
 
     select, textarea {
       width: 100%;
@@ -65,13 +63,9 @@
       box-sizing: border-box;
     }
 
-    textarea { height: 180px; resize: none; }
+    textarea { height: 150px; resize: none; }
 
-    .button-group {
-      display: flex;
-      gap: 10px;
-    }
-
+    .button-group { display: flex; gap: 10px; }
     button {
       flex: 1;
       padding: 15px;
@@ -80,22 +74,14 @@
       font-weight: bold;
       font-size: 16px;
       cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
+      transition: all 0.2s;
     }
-
-    button:active { transform: scale(0.98); }
 
     .btn-main { background: var(--primary); color: white; }
     .btn-copy { background: var(--secondary); color: white; }
-    .btn-reset { background: transparent; color: var(--danger); }
+    .btn-reset { background: transparent; color: var(--danger); margin-top: 5px; }
 
-    /* Chips per suggerimenti rapidi */
-    .chips {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 5px;
-    }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
     .chip {
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -110,27 +96,37 @@
 
 <body>
   <div class="container">
-    <h1>🧠 Prompt Builder</h1>
-    <p>Ottimizza le tue richieste AI</p>
+    <h1>🧠 Prompt Builder Pro</h1>
 
     <div class="chips">
-      <div class="chip" onclick="setTemplate('Riassumi questo testo in 3 punti chiave:')">📝 Riassunto</div>
-      <div class="chip" onclick="setTemplate('Scrivi una email professionale a [Nome] per:')">📧 Email</div>
-      <div class="chip" onclick="setTemplate('Trova l\'errore in questo codice e spiegalo:')">💻 Debug</div>
-      <div class="chip" onclick="setTemplate('Spiega questo concetto come se avessi 5 anni:')">👶 ELI5</div>
+      <div class="chip" onclick="setTemplate('Un astronauta che cavalca un cavallo su Marte')">🌌 Sci-Fi</div>
+      <div class="chip" onclick="setTemplate('Ritratto di una donna anziana, stile iperrealistico')">📸 Ritratto</div>
+      <div class="chip" onclick="setTemplate('Cyberpunk city, pioggia, luci neon, vista cinematografica')">🏙️ City</div>
     </div>
 
-    <select id="toneSelect">
-      <option value="professionale, autoritario ed esperto">Tono: Professionale</option>
-      <option value="creativo, originale e coinvolgente">Tono: Creativo</option>
-      <option value="semplice, chiaro e conciso">Tono: Semplice</option>
-      <option value="ironico e divertente">Tono: Sarcastico</option>
-    </select>
+    <div>
+      <label>Cosa vuoi creare?</label>
+      <select id="typeSelect" onchange="updateUI()">
+        <option value="text">✍️ Testo / Risposta</option>
+        <option value="image">🎨 Immagine (Midjourney/DALL-E)</option>
+        <option value="video">🎥 Video (Sora/Runway)</option>
+      </select>
+    </div>
 
-    <textarea id="promptInput" placeholder="Inserisci la tua idea..."></textarea>
+    <div id="toneContainer">
+      <label>Tono / Stile</label>
+      <select id="toneSelect">
+        <option value="professionale">Professionale / Fotorealistico</option>
+        <option value="creativo">Creativo / Artistico</option>
+        <option value="cinematografico">Cinematografico / Drammatico</option>
+        <option value="minimalista">Minimalista / Pulito</option>
+      </select>
+    </div>
+
+    <textarea id="promptInput" placeholder="Descrivi la tua idea qui..."></textarea>
 
     <div class="button-group">
-      <button class="btn-main" onclick="generatePrompt()">Ottimizza ✨</button>
+      <button class="btn-main" onclick="generatePrompt()">Genera Prompt ✨</button>
       <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
     </div>
 
@@ -139,59 +135,56 @@
 
   <script>
     const area = document.getElementById('promptInput');
+    const type = document.getElementById('typeSelect');
     const tone = document.getElementById('toneSelect');
 
-    // Recupera l'ultimo prompt salvato al caricamento
-    window.onload = () => {
-      const saved = localStorage.getItem('lastPrompt');
-      if (saved) area.value = saved;
-    };
+    function updateUI() {
+      // Potresti cambiare i placeholder o le opzioni di tono in base al tipo selezionato
+    }
+
+    function generatePrompt() {
+      const input = area.value.trim();
+      if (!input) return alert("Inserisci un'idea!");
+
+      let finalPrompt = "";
+
+      if (type.value === "text") {
+        finalPrompt = `Agisci come un esperto. Usando un tono ${tone.value}, elabora questa richiesta: "${input}". Fornisci una risposta strutturata e completa.`;
+      } 
+      else if (type.value === "image") {
+        finalPrompt = `Prompt per generazione immagini AI: "${input}". Stile: ${tone.value}. Dettagli: 8k resolution, highly detailed, professional lighting, cinematic composition, trending on ArtStation, sharp focus.`;
+      } 
+      else if (type.value === "video") {
+        finalPrompt = `Prompt per generazione video AI: "${input}". Movimento camera: drone shot / cinematic pan. Stile: ${tone.value}. Atmosfera: immersiva, alta fedeltà, 24fps, photorealistic textures.`;
+      }
+
+      area.value = finalPrompt;
+      localStorage.setItem('lastPrompt', area.value);
+    }
+
+    async function copyPrompt() {
+      if (!area.value) return;
+      await navigator.clipboard.writeText(area.value);
+      alert("Copiato!");
+    }
 
     function setTemplate(text) {
       area.value = text;
       area.focus();
     }
 
-    function generatePrompt() {
-      const input = area.value.trim();
-      if (!input) return alert("Inserisci del testo!");
-
-      const enhanced = `Agisci come un assistente esperto. Usando un tono ${tone.value}, elabora la seguente richiesta:\n\n"${input}"\n\nFornisci una risposta strutturata, precisa e completa.`;
-      
-      area.value = enhanced;
-      saveLocal();
-    }
-
-    async function copyPrompt() {
-      if (!area.value) return;
-      try {
-        await navigator.clipboard.writeText(area.value);
-        const originalBtn = document.querySelector('.btn-copy').innerText;
-        document.querySelector('.btn-copy').innerText = "Copiato! ✅";
-        setTimeout(() => { document.querySelector('.btn-copy').innerText = "Copia 📋"; }, 2000);
-      } catch (err) {
-        alert("Errore nella copia");
-      }
-    }
-
     function resetAll() {
-      if (confirm("Vuoi cancellare tutto?")) {
+      if (confirm("Cancello tutto?")) {
         area.value = "";
         localStorage.removeItem('lastPrompt');
       }
     }
 
-    function saveLocal() {
-      localStorage.setItem('lastPrompt', area.value);
-    }
-
-    // Salvataggio automatico mentre si scrive
-    area.addEventListener('input', saveLocal);
-
-    // Registrazione Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
+    // Caricamento dati salvati
+    window.onload = () => {
+      const saved = localStorage.getItem('lastPrompt');
+      if (saved) area.value = saved;
+    };
   </script>
 </body>
 </html>
