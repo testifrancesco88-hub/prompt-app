@@ -18,6 +18,8 @@
       --text-color: #2c3e50;
       --primary: #007AFF;
       --secondary: #34C759;
+      --accent: #5856D6;
+      --fav: #FFCC00;
       --danger: #ff3b30;
       --border: #ddd;
     }
@@ -39,6 +41,7 @@
       justify-content: center;
       padding: 20px;
       margin: 0;
+      line-height: 1.4;
     }
 
     .container {
@@ -50,7 +53,7 @@
     }
 
     h1 { text-align: center; margin-bottom: 5px; font-size: 24px; }
-    label { font-size: 12px; font-weight: bold; text-transform: uppercase; opacity: 0.7; margin-left: 5px; }
+    label { font-size: 11px; font-weight: bold; text-transform: uppercase; opacity: 0.6; margin-left: 5px; }
 
     select, textarea {
       width: 100%;
@@ -61,36 +64,59 @@
       color: var(--text-color);
       font-size: 16px;
       box-sizing: border-box;
+      outline: none;
     }
 
-    textarea { height: 150px; resize: none; }
+    textarea { height: 140px; resize: none; border-bottom: 3px solid var(--primary); }
 
-    .button-group { display: flex; gap: 10px; }
+    .button-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    
     button {
       flex: 1;
-      padding: 15px;
+      min-width: 100px;
+      padding: 14px;
       border: none;
       border-radius: 12px;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-main { background: var(--primary); color: white; }
     .btn-copy { background: var(--secondary); color: white; }
-    .btn-reset { background: transparent; color: var(--danger); margin-top: 5px; }
+    .btn-inspire { background: var(--accent); color: white; }
+    .btn-fav { background: var(--fav); color: #000; }
+    .btn-reset { background: transparent; color: var(--danger); width: 100%; margin-top: 5px; }
 
-    .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
-    .chip {
+    /* Preferiti */
+    .favorites-section { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .fav-item {
       background: var(--card-bg);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
       font-size: 13px;
-      white-space: nowrap;
-      cursor: pointer;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
+    .fav-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-right: 10px; }
+
+    /* Sezione Info */
+    .info-box {
+      background: var(--card-bg);
+      padding: 15px;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      border: 1px dashed var(--border);
+    }
+    .dev-name { font-weight: bold; color: var(--primary); }
+
+    button:active { transform: scale(0.96); opacity: 0.8; }
   </style>
 </head>
 
@@ -98,92 +124,118 @@
   <div class="container">
     <h1>🧠 Prompt Builder Pro</h1>
 
-    <div class="chips">
-      <div class="chip" onclick="setTemplate('Un astronauta che cavalca un cavallo su Marte')">🌌 Sci-Fi</div>
-      <div class="chip" onclick="setTemplate('Ritratto di una donna anziana, stile iperrealistico')">📸 Ritratto</div>
-      <div class="chip" onclick="setTemplate('Cyberpunk city, pioggia, luci neon, vista cinematografica')">🏙️ City</div>
-    </div>
-
     <div>
-      <label>Cosa vuoi creare?</label>
-      <select id="typeSelect" onchange="updateUI()">
-        <option value="text">✍️ Testo / Risposta</option>
-        <option value="image">🎨 Immagine (Midjourney/DALL-E)</option>
-        <option value="video">🎥 Video (Sora/Runway)</option>
+      <label>Categoria</label>
+      <select id="typeSelect">
+        <option value="text">✍️ Testo / Chat</option>
+        <option value="image">🎨 Immagine AI</option>
+        <option value="video">🎥 Video AI</option>
       </select>
     </div>
 
-    <div id="toneContainer">
-      <label>Tono / Stile</label>
-      <select id="toneSelect">
-        <option value="professionale">Professionale / Fotorealistico</option>
-        <option value="creativo">Creativo / Artistico</option>
-        <option value="cinematografico">Cinematografico / Drammatico</option>
-        <option value="minimalista">Minimalista / Pulito</option>
-      </select>
-    </div>
-
-    <textarea id="promptInput" placeholder="Descrivi la tua idea qui..."></textarea>
+    <textarea id="promptInput" placeholder="Inserisci la tua idea o usa 'Ispirami'..."></textarea>
 
     <div class="button-group">
-      <button class="btn-main" onclick="generatePrompt()">Genera Prompt ✨</button>
+      <button class="btn-inspire" onclick="inspireMe()">Ispirami 🎲</button>
+      <button class="btn-main" onclick="generatePrompt()">Ottimizza ✨</button>
+      <button class="btn-fav" onclick="saveToFavorites()">Salva ⭐</button>
       <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
     </div>
 
+    <div class="favorites-section">
+      <label>Preferiti ⭐</label>
+      <div id="favoritesList"></div>
+    </div>
+
     <button class="btn-reset" onclick="resetAll()">Svuota tutto</button>
+
+    <div class="info-box">
+      <p>🚀 <strong>Prompt Builder Pro</strong> v1.5<br>
+      Sviluppato con ❤️ da <span class="dev-name">Testi Francesco</span></p>
+    </div>
   </div>
 
   <script>
     const area = document.getElementById('promptInput');
     const type = document.getElementById('typeSelect');
-    const tone = document.getElementById('toneSelect');
+    const favList = document.getElementById('favoritesList');
 
-    function updateUI() {
-      // Potresti cambiare i placeholder o le opzioni di tono in base al tipo selezionato
+    const ideas = {
+      text: ["Un itinerario di 3 giorni a Roma", "Una ricetta sana con avocado", "Spiega la blockchain a un nonno"],
+      image: ["Cyberpunk city in the rain", "Astronaut riding a horse on mars", "Hyperrealistic cat portrait"],
+      video: ["Aerial shot of an island", "Time-lapse of a flower blooming", "Cinematic drone flight through mountains"]
+    };
+
+    function inspireMe() {
+      const list = ideas[type.value];
+      area.value = list[Math.floor(Math.random() * list.length)];
+      saveLocal();
     }
 
     function generatePrompt() {
       const input = area.value.trim();
-      if (!input) return alert("Inserisci un'idea!");
+      if (!input) return alert("Scrivi qualcosa!");
+      
+      let res = "";
+      if (type.value === "text") res = `Agisci come un esperto. Elabora: "${input}".`;
+      else if (type.value === "image") res = `AI Image: "${input}", 8k, cinematic, sharp focus.`;
+      else res = `AI Video: "${input}", smooth motion, 4k, photorealistic.`;
+      
+      area.value = res;
+      saveLocal();
+    }
 
-      let finalPrompt = "";
-
-      if (type.value === "text") {
-        finalPrompt = `Agisci come un esperto. Usando un tono ${tone.value}, elabora questa richiesta: "${input}". Fornisci una risposta strutturata e completa.`;
-      } 
-      else if (type.value === "image") {
-        finalPrompt = `Prompt per generazione immagini AI: "${input}". Stile: ${tone.value}. Dettagli: 8k resolution, highly detailed, professional lighting, cinematic composition, trending on ArtStation, sharp focus.`;
-      } 
-      else if (type.value === "video") {
-        finalPrompt = `Prompt per generazione video AI: "${input}". Movimento camera: drone shot / cinematic pan. Stile: ${tone.value}. Atmosfera: immersiva, alta fedeltà, 24fps, photorealistic textures.`;
+    function saveToFavorites() {
+      const text = area.value.trim();
+      if (!text) return;
+      let favs = JSON.parse(localStorage.getItem('favPrompts') || '[]');
+      if (!favs.includes(text)) {
+        favs.push(text);
+        localStorage.setItem('favPrompts', JSON.stringify(favs));
+        renderFavorites();
       }
+    }
 
-      area.value = finalPrompt;
-      localStorage.setItem('lastPrompt', area.value);
+    function renderFavorites() {
+      const favs = JSON.parse(localStorage.getItem('favPrompts') || '[]');
+      favList.innerHTML = favs.map((f, i) => `
+        <div class="fav-item">
+          <span class="fav-text">${f}</span>
+          <div>
+            <button onclick="useFav(${i})" style="background:var(--primary); color:white; padding:4px 8px; min-width:auto">Usa</button>
+            <button onclick="removeFav(${i})" style="background:var(--danger); color:white; padding:4px 8px; min-width:auto">X</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function useFav(i) {
+      area.value = JSON.parse(localStorage.getItem('favPrompts'))[i];
+      saveLocal();
+    }
+
+    function removeFav(i) {
+      let favs = JSON.parse(localStorage.getItem('favPrompts'));
+      favs.splice(i, 1);
+      localStorage.setItem('favPrompts', JSON.stringify(favs));
+      renderFavorites();
     }
 
     async function copyPrompt() {
-      if (!area.value) return;
       await navigator.clipboard.writeText(area.value);
       alert("Copiato!");
     }
 
-    function setTemplate(text) {
-      area.value = text;
-      area.focus();
-    }
-
     function resetAll() {
-      if (confirm("Cancello tutto?")) {
-        area.value = "";
-        localStorage.removeItem('lastPrompt');
-      }
+      area.value = "";
+      localStorage.removeItem('lastPrompt');
     }
 
-    // Caricamento dati salvati
+    function saveLocal() { localStorage.setItem('lastPrompt', area.value); }
+    
     window.onload = () => {
-      const saved = localStorage.getItem('lastPrompt');
-      if (saved) area.value = saved;
+      renderFavorites();
+      if (localStorage.getItem('lastPrompt')) area.value = localStorage.getItem('lastPrompt');
     };
   </script>
 </body>
