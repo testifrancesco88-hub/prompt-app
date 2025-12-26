@@ -4,25 +4,65 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>🧠 Prompt Builder Pro AI</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="assets/icon-180.png">
+  <link rel="icon" href="assets/icon-192.png">
+
   <style>
-    /* ... (Mantengo il tuo stile precedente con alcune rifiniture) ... */
     :root {
       --bg-color: #f4f7f6; --card-bg: #ffffff; --text-color: #2c3e50;
-      --primary: #007AFF; --ai-color: #10a37f; --accent: #5856D6; --border: #ddd;
+      --primary: #007AFF; --ai-color: #10a37f; --accent: #5856D6;
+      --fav: #FFCC00; --danger: #ff3b30; --border: #ddd;
     }
+
     @media (prefers-color-scheme: dark) {
       :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #f4f7f6; --border: #333; }
     }
-    body { font-family: -apple-system, sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; display: flex; justify-content: center; }
+
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex; justify-content: center; padding: 20px; margin: 0;
+    }
+
     .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
-    textarea { width: 100%; height: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card-bg); color: var(--text-color); font-size: 16px; box-sizing: border-box; }
+
+    /* Box Sicurezza API */
+    .api-box {
+      background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; 
+      font-size: 12px; border: 1px solid #ffeeba;
+    }
+    .api-box input {
+      width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; 
+      border: 1px solid #ccc; box-sizing: border-box;
+    }
+
+    select, textarea {
+      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text-color); font-size: 16px; box-sizing: border-box;
+    }
+
+    textarea { height: 140px; resize: none; border-bottom: 3px solid var(--primary); }
+
     .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    button { padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+    
+    button {
+      padding: 14px; border: none; border-radius: 12px; font-weight: bold;
+      font-size: 14px; cursor: pointer; transition: all 0.2s;
+    }
+
     .btn-ai { background: var(--ai-color); color: white; grid-column: span 2; }
-    .btn-main { background: var(--primary); color: white; }
+    .btn-inspire { background: var(--accent); color: white; }
     .btn-copy { background: #34C759; color: white; }
-    .loader { display: none; text-align: center; font-size: 14px; color: var(--ai-color); }
-    .api-config { font-size: 10px; opacity: 0.5; text-align: center; }
+    .btn-reset { background: transparent; color: var(--danger); width: 100%; }
+
+    .loader { display: none; text-align: center; font-weight: bold; color: var(--ai-color); margin: 5px 0; }
+    
+    .info-box { text-align: center; margin-top: 20px; font-size: 13px; opacity: 0.8; }
   </style>
 </head>
 
@@ -30,97 +70,112 @@
   <div class="container">
     <h1>🧠 Prompt Builder Pro</h1>
 
+    <div class="api-box">
+      <strong>🔑 Configurazione Sicura OpenAI</strong><br>
+      Inserisci la tua API Key (verrà salvata solo sul tuo telefono):
+      <input type="password" id="apiKeyInput" placeholder="sk-...">
+    </div>
+
     <select id="typeSelect">
-      <option value="text">✍️ Testo (Ottimizzazione AI)</option>
-      <option value="image">🎨 Immagine (Genera Prompt Artistico)</option>
-      <option value="video">🎥 Video (Genera Storyboard)</option>
+      <option value="testo">✍️ Ottimizzazione Testo</option>
+      <option value="immagine">🎨 Generatore Prompt Immagine</option>
+      <option value="video">🎥 Storyboard Video</option>
     </select>
 
-    <textarea id="promptInput" placeholder="Inserisci un'idea o una bozza..."></textarea>
+    <textarea id="promptInput" placeholder="Inserisci un'idea o usa 'Ispirami'..."></textarea>
 
-    <div id="loading" class="loader">🧠 L'AI sta pensando...</div>
+    <div id="loading" class="loader">🧠 L'AI sta elaborando...</div>
 
     <div class="button-grid">
-      <button class="btn-ai" id="aiBtn" onclick="callChatGPT()">AI: Genera con ChatGPT ✨</button>
-      
-      <button class="btn-main" onclick="generateClassic()">Ottimizzazione Base</button>
+      <button class="btn-ai" id="aiBtn" onclick="callChatGPT()">Genera con ChatGPT ✨</button>
+      <button class="btn-inspire" onclick="inspireMe()">🎲 Ispirami</button>
       <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
     </div>
 
-    <div class="api-config">Powered by OpenAI API</div>
-    
-    <div class="info-box" style="text-align: center; margin-top: 10px; font-size: 12px;">
-      Sviluppato da <strong>Testi Francesco</strong>
+    <button class="btn-reset" onclick="resetAll()">Svuota tutto</button>
+
+    <div class="info-box">
+      🚀 Sviluppato da <strong>Testi Francesco</strong>
     </div>
   </div>
 
   <script>
-    // --- CONFIGURAZIONE API ---
-    // NOTA: In un'app reale, usa un server backend per nascondere questa chiave!
-    const OPENAI_API_KEY = "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"; 
-
     const area = document.getElementById('promptInput');
     const type = document.getElementById('typeSelect');
+    const keyInput = document.getElementById('apiKeyInput');
     const loader = document.getElementById('loading');
-    const aiBtn = document.getElementById('aiBtn');
+
+    // Carica la chiave salvata localmente
+    window.onload = () => {
+      if (localStorage.getItem('user_openai_key')) {
+        keyInput.value = localStorage.getItem('user_openai_key');
+      }
+      if (localStorage.getItem('lastPrompt')) {
+        area.value = localStorage.getItem('lastPrompt');
+      }
+    };
+
+    // Salva la chiave mentre la scrivi
+    keyInput.addEventListener('input', () => {
+      localStorage.setItem('user_openai_key', keyInput.value.trim());
+    });
 
     async function callChatGPT() {
+      const apiKey = keyInput.value.trim();
       const userInput = area.value.trim();
-      if (!userInput) return alert("Inserisci un'idea prima!");
-      if (OPENAI_API_KEY === "INSERISCI_QUI_LA_TUA_CHIAVE_API") {
-        return alert("Devi inserire la tua API KEY nel codice sorgente.");
-      }
 
-      // Mostra loader e disabilita tasto
+      if (!apiKey) return alert("Inserisci la tua API Key OpenAI!");
+      if (!userInput) return alert("Scrivi un'idea da elaborare!");
+
       loader.style.display = "block";
-      aiBtn.disabled = true;
-      aiBtn.style.opacity = "0.5";
+      document.getElementById('aiBtn').disabled = true;
 
-      const systemPrompt = `Sei un esperto Prompt Engineer. 
-        Il tuo compito è trasformare l'idea dell'utente in un prompt perfetto per ${type.value}. 
-        Sii creativo, usa terminologia tecnica appropriata e restituisci SOLO il prompt finale, senza introduzioni.`;
+      const systemMsg = `Sei un Prompt Engineer esperto. Crea un prompt perfetto per ${type.value}. Restituisci solo il prompt ottimizzato.`;
 
       try {
         const response = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_API_KEY}`
+            "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: "gpt-4o-mini", // Modello economico e veloce
+            model: "gpt-4o-mini",
             messages: [
-              { role: "system", content: systemPrompt },
+              { role: "system", content: systemMsg },
               { role: "user", content: userInput }
-            ],
-            temperature: 0.7
+            ]
           })
         });
 
         const data = await response.json();
-        if (data.choices && data.choices[0]) {
+        if (data.choices) {
           area.value = data.choices[0].message.content.trim();
+          localStorage.setItem('lastPrompt', area.value);
         } else {
-          alert("Errore API: " + (data.error ? data.error.message : "Sconosciuto"));
+          alert("Errore: " + data.error.message);
         }
-      } catch (error) {
-        alert("Errore di connessione: " + error.message);
+      } catch (e) {
+        alert("Errore di connessione!");
       } finally {
         loader.style.display = "none";
-        aiBtn.disabled = false;
-        aiBtn.style.opacity = "1";
+        document.getElementById('aiBtn').disabled = false;
       }
     }
 
-    // Funzione classica (senza API) come fallback
-    function generateClassic() {
-      if (!area.value) return;
-      area.value = `[Classic Mode] Agisci come un esperto di ${type.value}. Ottimizza questa richiesta: ${area.value}`;
+    function inspireMe() {
+      const ideas = ["Un futuro sostenibile", "Gatto cyber-ninja", "Ricetta spaziale", "Orizzonte degli eventi"];
+      area.value = ideas[Math.floor(Math.random() * ideas.length)];
     }
 
     async function copyPrompt() {
       await navigator.clipboard.writeText(area.value);
-      alert("Copiato negli appunti!");
+      alert("Copiato!");
+    }
+
+    function resetAll() {
+      area.value = "";
+      localStorage.removeItem('lastPrompt');
     }
   </script>
 </body>
