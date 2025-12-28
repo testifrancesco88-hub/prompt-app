@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>🧠 Prompt Builder Pro AI</title>
+  <title>🧠 Prompt Builder Pro (Local)</title>
 
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,169 +14,215 @@
   <style>
     :root {
       --bg-color: #f4f7f6; --card-bg: #ffffff; --text-color: #2c3e50;
-      --primary: #007AFF; --ai-color: #10a37f; --accent: #5856D6;
+      --primary: #007AFF; --secondary: #34C759; --accent: #5856D6;
       --fav: #FFCC00; --danger: #ff3b30; --border: #ddd;
     }
-
     @media (prefers-color-scheme: dark) {
       :root { --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #f4f7f6; --border: #333; }
     }
 
     body {
       font-family: -apple-system, system-ui, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
+      background-color: var(--bg-color); color: var(--text-color);
       display: flex; justify-content: center; padding: 20px; margin: 0;
     }
 
     .container { width: 100%; max-width: 500px; display: flex; flex-direction: column; gap: 15px; }
 
-    /* Box Sicurezza API */
-    .api-box {
-      background: #fff3cd; color: #856404; padding: 12px; border-radius: 12px; 
-      font-size: 12px; border: 1px solid #ffeeba;
-    }
-    .api-box input {
-      width: 100%; margin-top: 8px; padding: 8px; border-radius: 6px; 
-      border: 1px solid #ccc; box-sizing: border-box;
-    }
+    h1 { text-align: center; margin-bottom: 5px; font-size: 26px; }
+    p { text-align: center; margin-top: -10px; opacity: 0.7; font-size: 14px; }
+    label { font-size: 11px; font-weight: bold; text-transform: uppercase; opacity: 0.6; margin-left: 5px; }
 
     select, textarea {
-      width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
-      background: var(--card-bg); color: var(--text-color); font-size: 16px; box-sizing: border-box;
+      width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text-color); font-size: 16px; box-sizing: border-box; outline: none;
     }
 
-    textarea { height: 140px; resize: none; border-bottom: 3px solid var(--primary); }
+    /* Area di testo con pulsante microfono */
+    .input-wrapper { position: relative; }
+    textarea { height: 160px; padding-bottom: 40px; border-bottom: 4px solid var(--primary); }
+    
+    .mic-btn {
+      position: absolute; bottom: 10px; right: 10px;
+      background: rgba(0,0,0,0.05); border-radius: 50%;
+      width: 35px; height: 35px; border: none; cursor: pointer;
+      font-size: 18px; display: flex; align-items: center; justify-content: center;
+      transition: background 0.3s;
+    }
+    .mic-btn.listening { background: var(--danger); color: white; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
     .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    button { padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; }
     
-    button {
-      padding: 14px; border: none; border-radius: 12px; font-weight: bold;
-      font-size: 14px; cursor: pointer; transition: all 0.2s;
-    }
-
-    .btn-ai { background: var(--ai-color); color: white; grid-column: span 2; }
+    .btn-main { background: var(--primary); color: white; grid-column: span 2; font-size: 18px; }
     .btn-inspire { background: var(--accent); color: white; }
-    .btn-copy { background: #34C759; color: white; }
-    .btn-reset { background: transparent; color: var(--danger); width: 100%; }
+    .btn-fav { background: var(--fav); color: #333; }
+    .btn-copy { background: var(--secondary); color: white; grid-column: span 2; }
+    .btn-reset { background: transparent; color: var(--danger); font-size: 12px; margin-top: 5px; }
 
-    .loader { display: none; text-align: center; font-weight: bold; color: var(--ai-color); margin: 5px 0; }
-    
-    .info-box { text-align: center; margin-top: 20px; font-size: 13px; opacity: 0.8; }
+    /* Sezione Preferiti */
+    .fav-section { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 15px; }
+    .fav-item {
+      background: var(--card-bg); padding: 10px; border-radius: 10px; margin-bottom: 8px;
+      font-size: 13px; border: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .fav-text { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 10px; }
+
+    .info-box { text-align: center; margin-top: 30px; font-size: 13px; opacity: 0.8; }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <h1>🧠 Prompt Builder Pro</h1>
+    <h1>🧠 Prompt Builder</h1>
+    <p>Potenziatore Offline con Voce & Preferiti</p>
 
-    <div class="api-box">
-      <strong>🔑 Configurazione Sicura OpenAI</strong><br>
-      Inserisci la tua API Key (verrà salvata solo sul tuo telefono):
-      <input type="password" id="apiKeyInput" placeholder="sk-...">
+    <div>
+      <label>Categoria</label>
+      <select id="typeSelect">
+        <option value="text">✍️ Testo (ChatGPT/Claude)</option>
+        <option value="image">🎨 Immagine (Midjourney)</option>
+        <option value="video">🎥 Video (Sora/Runway)</option>
+      </select>
     </div>
 
-    <select id="typeSelect">
-      <option value="testo">✍️ Ottimizzazione Testo</option>
-      <option value="immagine">🎨 Generatore Prompt Immagine</option>
-      <option value="video">🎥 Storyboard Video</option>
-    </select>
-
-    <textarea id="promptInput" placeholder="Inserisci un'idea o usa 'Ispirami'..."></textarea>
-
-    <div id="loading" class="loader">🧠 L'AI sta elaborando...</div>
+    <div class="input-wrapper">
+      <textarea id="promptInput" placeholder="Scrivi o detta la tua idea..."></textarea>
+      <button class="mic-btn" id="micBtn" onclick="toggleSpeech()" title="Dettatura vocale">🎙️</button>
+    </div>
 
     <div class="button-grid">
-      <button class="btn-ai" id="aiBtn" onclick="callChatGPT()">Genera con ChatGPT ✨</button>
+      <button class="btn-main" onclick="buildPrompt()">Potenzia Prompt ✨</button>
       <button class="btn-inspire" onclick="inspireMe()">🎲 Ispirami</button>
-      <button class="btn-copy" onclick="copyPrompt()">Copia 📋</button>
+      <button class="btn-fav" onclick="saveFavorite()">Salva ⭐</button>
+      <button class="btn-copy" onclick="copyPrompt()">Copia Tutto 📋</button>
+    </div>
+
+    <div class="fav-section" id="favContainer" style="display:none;">
+      <label>I tuoi Preferiti ⭐</label>
+      <div id="favoritesList"></div>
     </div>
 
     <button class="btn-reset" onclick="resetAll()">Svuota tutto</button>
 
     <div class="info-box">
-      🚀 Sviluppato da <strong>Testi Francesco</strong>
+      🚀 Creato da <strong>Testi Francesco</strong>
     </div>
   </div>
 
   <script>
     const area = document.getElementById('promptInput');
     const type = document.getElementById('typeSelect');
-    const keyInput = document.getElementById('apiKeyInput');
-    const loader = document.getElementById('loading');
+    const micBtn = document.getElementById('micBtn');
+    const favList = document.getElementById('favoritesList');
+    const favContainer = document.getElementById('favContainer');
 
-    // Carica la chiave salvata localmente
-    window.onload = () => {
-      if (localStorage.getItem('user_openai_key')) {
-        keyInput.value = localStorage.getItem('user_openai_key');
+    // --- 1. RICONOSCIMENTO VOCALE ---
+    let recognition;
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'it-IT';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => { micBtn.classList.add('listening'); };
+      recognition.onend = () => { micBtn.classList.remove('listening'); };
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        // Aggiunge il testo dettato a quello esistente
+        area.value = (area.value + " " + transcript).trim();
+      };
+    } else {
+      micBtn.style.display = 'none'; // Nascondi se non supportato
+    }
+
+    function toggleSpeech() {
+      if (micBtn.classList.contains('listening')) recognition.stop();
+      else recognition.start();
+    }
+
+    // --- 2. POTENZIAMENTO PROMPT (LOCAL) ---
+    function buildPrompt() {
+      const input = area.value.trim();
+      if (!input) return alert("Inserisci un'idea!");
+      
+      let final = "";
+      if (type.value === "text") {
+        final = `Agisci come un esperto. Analizza: "${input}". Fornisci una risposta dettagliata, strutturata per punti e con esempi pratici.`;
+      } else if (type.value === "image") {
+        final = `Hyper-realistic prompt: ${input}, 8k resolution, cinematic lighting, intricate details, masterpiece, trending on ArtStation.`;
+      } else {
+        final = `Cinematic video: ${input}, 4k, 60fps, drone shot, highly detailed, realistic physics, professional color grading.`;
       }
-      if (localStorage.getItem('lastPrompt')) {
-        area.value = localStorage.getItem('lastPrompt');
-      }
-    };
+      area.value = final;
+      saveLocal();
+    }
 
-    // Salva la chiave mentre la scrivi
-    keyInput.addEventListener('input', () => {
-      localStorage.setItem('user_openai_key', keyInput.value.trim());
-    });
-
-    async function callChatGPT() {
-      const apiKey = keyInput.value.trim();
-      const userInput = area.value.trim();
-
-      if (!apiKey) return alert("Inserisci la tua API Key OpenAI!");
-      if (!userInput) return alert("Scrivi un'idea da elaborare!");
-
-      loader.style.display = "block";
-      document.getElementById('aiBtn').disabled = true;
-
-      const systemMsg = `Sei un Prompt Engineer esperto. Crea un prompt perfetto per ${type.value}. Restituisci solo il prompt ottimizzato.`;
-
-      try {
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "system", content: systemMsg },
-              { role: "user", content: userInput }
-            ]
-          })
-        });
-
-        const data = await response.json();
-        if (data.choices) {
-          area.value = data.choices[0].message.content.trim();
-          localStorage.setItem('lastPrompt', area.value);
-        } else {
-          alert("Errore: " + data.error.message);
-        }
-      } catch (e) {
-        alert("Errore di connessione!");
-      } finally {
-        loader.style.display = "none";
-        document.getElementById('aiBtn').disabled = false;
+    // --- 3. GESTIONE PREFERITI ---
+    function saveFavorite() {
+      const text = area.value.trim();
+      if (!text) return;
+      let favs = JSON.parse(localStorage.getItem('myFavs') || '[]');
+      if (!favs.includes(text)) {
+        favs.push(text);
+        localStorage.setItem('myFavs', JSON.stringify(favs));
+        renderFavs();
       }
     }
 
+    function renderFavs() {
+      const favs = JSON.parse(localStorage.getItem('myFavs') || '[]');
+      if (favs.length > 0) favContainer.style.display = 'block';
+      else favContainer.style.display = 'none';
+
+      favList.innerHTML = favs.map((f, i) => `
+        <div class="fav-item">
+          <span class="fav-text" onclick="loadFav(${i})">${f}</span>
+          <button onclick="deleteFav(${i})" style="padding:5px 10px; background:var(--danger); color:white; font-size:12px;">X</button>
+        </div>
+      `).join('');
+    }
+
+    function loadFav(i) {
+      area.value = JSON.parse(localStorage.getItem('myFavs'))[i];
+    }
+    
+    function deleteFav(i) {
+      let favs = JSON.parse(localStorage.getItem('myFavs'));
+      favs.splice(i, 1);
+      localStorage.setItem('myFavs', JSON.stringify(favs));
+      renderFavs();
+    }
+
+    // --- 4. ACCESSORI (ISPIRAMI, COPY, RESET) ---
     function inspireMe() {
-      const ideas = ["Un futuro sostenibile", "Gatto cyber-ninja", "Ricetta spaziale", "Orizzonte degli eventi"];
+      const ideas = ["Strategia Marketing", "Gatto Cyberpunk", "Volo su Marte", "Ricetta Vegana", "Storia Horror"];
       area.value = ideas[Math.floor(Math.random() * ideas.length)];
+      saveLocal();
     }
 
     async function copyPrompt() {
+      if(!area.value) return;
       await navigator.clipboard.writeText(area.value);
       alert("Copiato!");
     }
 
     function resetAll() {
-      area.value = "";
-      localStorage.removeItem('lastPrompt');
+      if(confirm("Cancellare tutto?")) {
+        area.value = "";
+        localStorage.removeItem('lastPrompt');
+      }
     }
+
+    function saveLocal() { localStorage.setItem('lastPrompt', area.value); }
+    
+    window.onload = () => {
+      if (localStorage.getItem('lastPrompt')) area.value = localStorage.getItem('lastPrompt');
+      renderFavs();
+    };
   </script>
 </body>
 </html>
